@@ -1,5 +1,6 @@
 // Add these debug logs at the top of your app.js file
 console.log("App initializing...");
+const API_BASE_URL = "https://disease-prediction-ai.up.railway.app"; 
 
 // Chart variables at the top
 let riskChart = null;
@@ -102,7 +103,7 @@ document.addEventListener("DOMContentLoaded", function () {
     submitBtn.querySelector("span").textContent = "Registering...";
 
     try {
-      const res = await fetch("http://127.0.0.1:5050/register", {
+      const res = await fetch(`${API_BASE_URL}/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
@@ -139,7 +140,7 @@ document.addEventListener("DOMContentLoaded", function () {
     submitBtn.querySelector("span").textContent = "Registering...";
 
     try {
-      const res = await fetch("http://127.0.0.1:5050/register", {
+      const res = await fetch(`${API_BASE_URL}/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
@@ -214,7 +215,7 @@ document.getElementById("login-form-data").addEventListener("submit", async (e) 
     
     console.log("Request payload:", requestBody);
     
-    const response = await fetch("http://127.0.0.1:5050/login", {
+    const response = await fetch(`${API_BASE_URL}/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(requestBody),
@@ -342,7 +343,7 @@ document.getElementById("login-form-data").addEventListener("submit", async (e) 
     submitBtn.textContent = "Analyzing...";
 
     try {
-      const res = await fetch("http://127.0.0.1:5050/predict", {
+      const res = await fetch(`${API_BASE_URL}/predict`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
