@@ -382,7 +382,11 @@ document.getElementById("login-form-data").addEventListener("submit", async (e) 
   async function loadUserLogs() {
     try {
       console.log("Loading user logs with token:", currentToken);
-      const res = await fetch(`${API_BASE_URL}/logs?token=${currentToken}`);
+      const res = await fetch(`${API_BASE_URL}/logs`, {
+  headers: {
+    'Authorization': `Bearer ${currentToken}`
+  }
+});
       const data = await res.json();
 
       if (data.status === "success" && data.logs.length > 0) {
@@ -407,11 +411,10 @@ document.getElementById("login-form-data").addEventListener("submit", async (e) 
   try {
     // Load summary stats
     const summaryRes = await fetch(`${API_BASE_URL}/admin-summary`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${currentToken}`
-      }
-    });
+  headers: {
+    'Authorization': `Bearer ${currentToken}`
+  }
+});
     
     const summaryData = await summaryRes.json();
     console.log("Summary data:", summaryData);  // Debug log
@@ -434,11 +437,10 @@ document.getElementById("login-form-data").addEventListener("submit", async (e) 
 
     // Load patient records
     const recordsRes = await fetch(`${API_BASE_URL}/all-records`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${currentToken}`
-      }
-    });
+  headers: {
+    'Authorization': `Bearer ${currentToken}`
+  }
+});
     
     const recordsData = await recordsRes.json();
     console.log("Records data:", recordsData);  // Debug log
@@ -480,11 +482,10 @@ document.getElementById("login-form-data").addEventListener("submit", async (e) 
     btn.disabled = true;
 
     const response = await fetch(`${API_BASE_URL}/download?type=${type}`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${currentToken}`  // Send token in Authorization header
-      }
-    });
+  headers: {
+    'Authorization': `Bearer ${currentToken}`
+  }
+});
     
     if (!response.ok) {
       const error = await response.json();
@@ -635,19 +636,23 @@ document.getElementById("login-form-data").addEventListener("submit", async (e) 
     }
   }
 
-  function updateDoctorChart(summary) {
-    try {
-      if (doctorChart) {
-        doctorChart.data.datasets[0].data = [
-          summary.non_diabetic_cases,
-          summary.diabetic_cases
-        ];
+  // Update doctor chart data handling:
+function updateDoctorChart(summary) {
+  try {
+    if (doctorChart) {
+      const diabetic = summary.diabetic_cases || 0;
+      const nonDiabetic = summary.non_diabetic_cases || 0;
+      
+      // Only update if we have data
+      if (diabetic + nonDiabetic > 0) {
+        doctorChart.data.datasets[0].data = [nonDiabetic, diabetic];
         doctorChart.update();
       }
-    } catch (error) {
-      console.error("Doctor chart update error:", error);
     }
+  } catch (error) {
+    console.error("Doctor chart update error:", error);
   }
+}
 
   function showSuggestion(prediction, suggestion) {
     try {
