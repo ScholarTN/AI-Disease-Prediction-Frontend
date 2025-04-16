@@ -48,7 +48,7 @@ document.addEventListener("DOMContentLoaded", function () {
   initCharts();
 
   // Event Listeners
-  selectUserBtn.addEventListener("click", () => {
+  selectUserBtn?.addEventListener("click", () => {
     console.log("User role selected");
     currentRole = "user";
     roleSelection.style.display = "none";
@@ -56,11 +56,13 @@ document.addEventListener("DOMContentLoaded", function () {
     
     // Remove required attribute from work ID field for patients
     const workIdInput = document.getElementById("login-workid");
-    workIdInput.required = false;
+    if (workIdInput) {
+      workIdInput.required = false;
+    }
     loginWorkIdField.style.display = "none";
   });
 
-  selectDoctorBtn.addEventListener("click", () => {
+  selectDoctorBtn?.addEventListener("click", () => {
     console.log("Doctor role selected");
     currentRole = "doctor";
     roleSelection.style.display = "none";
@@ -68,32 +70,34 @@ document.addEventListener("DOMContentLoaded", function () {
     
     // Set required attribute for work ID field for doctors
     const workIdInput = document.getElementById("login-workid");
-    workIdInput.required = true;
+    if (workIdInput) {
+      workIdInput.required = true;
+    }
     loginWorkIdField.style.display = "block";
   });
 
   // Show register role selection when "Register here" is clicked
-  showRegisterBtn.addEventListener("click", (e) => {
+  showRegisterBtn?.addEventListener("click", (e) => {
     e.preventDefault();
     loginForm.style.display = "none";
     registerRoleSelection.style.display = "block";
   });
 
   // Register Role Selection
-  document.getElementById("register-select-user").addEventListener("click", () => {
+  document.getElementById("register-select-user")?.addEventListener("click", () => {
     currentRole = "user";
     registerRoleSelection.style.display = "none";
     registerPatientForm.style.display = "block";
   });
 
-  document.getElementById("register-select-doctor").addEventListener("click", () => {
+  document.getElementById("register-select-doctor")?.addEventListener("click", () => {
     currentRole = "doctor";
     registerRoleSelection.style.display = "none";
     registerDoctorForm.style.display = "block";
   });
 
   // Register Patient
-  document.getElementById("register-patient-form-data").addEventListener("submit", async (e) => {
+  document.getElementById("register-patient-form-data")?.addEventListener("submit", async (e) => {
     e.preventDefault();
     const email = document.getElementById("register-patient-email").value;
     const password = document.getElementById("register-patient-password").value;
@@ -129,7 +133,7 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   // Register Doctor
-  document.getElementById("register-doctor-form-data").addEventListener("submit", async (e) => {
+  document.getElementById("register-doctor-form-data")?.addEventListener("submit", async (e) => {
     e.preventDefault();
     const email = document.getElementById("register-doctor-email").value;
     const password = document.getElementById("register-doctor-password").value;
@@ -155,11 +159,11 @@ document.addEventListener("DOMContentLoaded", function () {
       if (data.status === "success") {
         // Reset forms and show doctor login
         e.target.reset();
-        document.getElementById("register-doctor-form").style.display = "none";
-        document.getElementById("login-form").style.display = "block";
+        registerDoctorForm.style.display = "none";
+        loginForm.style.display = "block";
         // Set role to doctor and show work ID field
         currentRole = "doctor";
-        document.getElementById("login-workid-field").style.display = "block";
+        loginWorkIdField.style.display = "block";
       }
     } catch (error) {
       console.error("Registration error:", error);
@@ -181,105 +185,104 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 
-  // Fix the login form submission handler
-document.getElementById("login-form-data").addEventListener("submit", async (e) => {
-  e.preventDefault();
-  console.log("Login form submitted");
+  // Login Form Submission
+  document.getElementById("login-form-data")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    console.log("Login form submitted");
 
-  const email = document.getElementById("login-email").value;
-  const password = document.getElementById("login-password").value;
-  
-  // Only get workId if it's a doctor login and the field is visible
-  const workId = currentRole === "doctor" ? document.getElementById("login-workid").value : null;
-
-  console.log("Attempting login with:", { email, role: currentRole, hasWorkId: !!workId });
-
-  const submitBtn = e.target.querySelector("button[type='submit']");
-  submitBtn.disabled = true;
-  submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in...';
-
-  try {
-    // Debug point
-    console.log("About to send login request to backend");
+    const email = document.getElementById("login-email").value;
+    const password = document.getElementById("login-password").value;
     
-    const requestBody = {
-      email,
-      password,
-      role: currentRole
-    };
-    
-    // Only add workId for doctor role
-    if (currentRole === "doctor") {
-      requestBody.workId = workId;
-    }
-    
-    console.log("Request payload:", requestBody);
-    
-    const response = await fetch(`${API_BASE_URL}/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(requestBody),
-    });
+    // Only get workId if it's a doctor login and the field is visible
+    const workId = currentRole === "doctor" ? document.getElementById("login-workid").value : null;
 
-    console.log("Login response status:", response.status);
-    const data = await response.json();
-    console.log("Login response data:", data);
+    console.log("Attempting login with:", { email, role: currentRole, hasWorkId: !!workId });
 
-    if (data.status === "success") {
-      // Store user information
-      currentToken = data.token;
-      currentRole = data.role;
-      currentEmail = data.email;
+    const submitBtn = e.target.querySelector("button[type='submit']");
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in...';
+
+    try {
+      console.log("About to send login request to backend");
       
-      console.log("Login successful for role:", currentRole);
+      const requestBody = {
+        email,
+        password,
+        role: currentRole
+      };
       
-      // Save token to sessionStorage for persistence
-      sessionStorage.setItem('userToken', currentToken);
-      sessionStorage.setItem('userRole', currentRole);
-      sessionStorage.setItem('userEmail', currentEmail);
-
-      // Hide all auth sections
-      roleSelection.style.display = "none";
-      loginForm.style.display = "none";
-      registerRoleSelection.style.display = "none";
-      registerPatientForm.style.display = "none";
-      registerDoctorForm.style.display = "none";
-
-      // Show appropriate dashboard based on role
-      if (currentRole === "user") {
-        console.log("Showing user dashboard");
-        userDashboard.style.display = "block";
-        doctorDashboard.style.display = "none";
-        
-        // Reset form and hide previous results
-        if (predictForm) {
-          predictForm.reset();
-          resultContainer.style.display = "none";
-        }
-        
-        // Load user history
-        loadUserLogs();
-      } else if (currentRole === "doctor") {
-        console.log("Showing doctor dashboard");
-        userDashboard.style.display = "none";
-        doctorDashboard.style.display = "block";
-        loadDoctorData();
-      } else {
-        console.warn("Unknown role:", currentRole);
-        alert("Unknown user role. Please contact support.");
+      // Only add workId for doctor role
+      if (currentRole === "doctor") {
+        requestBody.workId = workId;
       }
-    } else {
-      console.error("Login failed:", data.message);
-      alert(data.message || "Login failed");
+      
+      console.log("Request payload:", requestBody);
+      
+      const response = await fetch(`${API_BASE_URL}/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestBody),
+      });
+
+      console.log("Login response status:", response.status);
+      const data = await response.json();
+      console.log("Login response data:", data);
+
+      if (data.status === "success") {
+        // Store user information
+        currentToken = data.token;
+        currentRole = data.role;
+        currentEmail = data.email;
+        
+        console.log("Login successful for role:", currentRole);
+        
+        // Save token to sessionStorage for persistence
+        sessionStorage.setItem('userToken', currentToken);
+        sessionStorage.setItem('userRole', currentRole);
+        sessionStorage.setItem('userEmail', currentEmail);
+
+        // Hide all auth sections
+        roleSelection.style.display = "none";
+        loginForm.style.display = "none";
+        registerRoleSelection.style.display = "none";
+        registerPatientForm.style.display = "none";
+        registerDoctorForm.style.display = "none";
+
+        // Show appropriate dashboard based on role
+        if (currentRole === "user") {
+          console.log("Showing user dashboard");
+          userDashboard.style.display = "block";
+          doctorDashboard.style.display = "none";
+          
+          // Reset form and hide previous results
+          if (predictForm) {
+            predictForm.reset();
+            resultContainer.style.display = "none";
+          }
+          
+          // Load user history
+          loadUserLogs();
+        } else if (currentRole === "doctor") {
+          console.log("Showing doctor dashboard");
+          userDashboard.style.display = "none";
+          doctorDashboard.style.display = "block";
+          loadDoctorData();
+        } else {
+          console.warn("Unknown role:", currentRole);
+          alert("Unknown user role. Please contact support.");
+        }
+      } else {
+        console.error("Login failed:", data.message);
+        alert(data.message || "Login failed");
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      alert("Login failed. Please try again. Error: " + error.message);
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = '<span>Login</span><i class="fas fa-arrow-right"></i>';
     }
-  } catch (error) {
-    console.error("Login error:", error);
-    alert("Login failed. Please try again. Error: " + error.message);
-  } finally {
-    submitBtn.disabled = false;
-    submitBtn.innerHTML = '<span>Login</span><i class="fas fa-arrow-right"></i>';
-  }
-});
+  });
 
   // Logout
   function logout() {
@@ -288,107 +291,126 @@ document.getElementById("login-form-data").addEventListener("submit", async (e) 
     currentRole = null;
     currentEmail = null;
     
+    // Clear session storage
+    sessionStorage.removeItem('userToken');
+    sessionStorage.removeItem('userRole');
+    sessionStorage.removeItem('userEmail');
+    
     // Hide all sections
-    userDashboard.style.display = "none";
-    doctorDashboard.style.display = "none";
-    loginForm.style.display = "none";
-    registerRoleSelection.style.display = "none";
-    registerPatientForm.style.display = "none";
-    registerDoctorForm.style.display = "none";
+    if (userDashboard) userDashboard.style.display = "none";
+    if (doctorDashboard) doctorDashboard.style.display = "none";
+    if (loginForm) loginForm.style.display = "none";
+    if (registerRoleSelection) registerRoleSelection.style.display = "none";
+    if (registerPatientForm) registerPatientForm.style.display = "none";
+    if (registerDoctorForm) registerDoctorForm.style.display = "none";
     
     // Show role selection
-    roleSelection.style.display = "block";
+    if (roleSelection) roleSelection.style.display = "block";
     
     // Reset forms
-    predictForm.reset();
-    document.getElementById("login-form-data").reset();
-    document.getElementById("register-patient-form-data").reset();
-    document.getElementById("register-doctor-form-data").reset();
+    if (predictForm) predictForm.reset();
+    if (document.getElementById("login-form-data")) document.getElementById("login-form-data").reset();
+    if (document.getElementById("register-patient-form-data")) document.getElementById("register-patient-form-data").reset();
+    if (document.getElementById("register-doctor-form-data")) document.getElementById("register-doctor-form-data").reset();
     
     // Hide work ID field
-    loginWorkIdField.style.display = "none";
+    if (loginWorkIdField) loginWorkIdField.style.display = "none";
     
-    resultContainer.style.display = "none";
+    if (resultContainer) resultContainer.style.display = "none";
   }
 
-  userLogoutBtn.addEventListener("click", logout);
-  doctorLogoutBtn.addEventListener("click", logout);
+  if (userLogoutBtn) userLogoutBtn.addEventListener("click", logout);
+  if (doctorLogoutBtn) doctorLogoutBtn.addEventListener("click", logout);
 
-  // Predict
-  predictForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    console.log("Prediction form submitted");
-    
-    // Get all form values
-    const formData = {
-      age: document.getElementById("age").value,
-      gender: document.getElementById("gender").value,
-      is_pregnant: document.getElementById("is_pregnant") ? document.getElementById("is_pregnant").value : 0,
-      height: document.getElementById("height").value || 0,
-      weight: document.getElementById("weight").value || 0,
-      bmi: document.getElementById("bmi").value || 0,
-      glucose: document.getElementById("glucose").value,
-      blood_pressure: document.getElementById("blood_pressure").value,
-      family_history: document.getElementById("family_history").value
-    };
-
-    // Validate required fields
-    if (!formData.age || !formData.glucose || !formData.blood_pressure || !formData.family_history || !formData.gender) {
-      alert("Please fill in all required fields");
-      return;
-    }
-
-    const submitBtn = e.target.querySelector("button[type='submit']");
-    submitBtn.disabled = true;
-    submitBtn.textContent = "Analyzing...";
-
-    try {
-      const res = await fetch(`${API_BASE_URL}/predict`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          token: currentToken,
-          ...formData
-        }),
-      });
-
-      const data = await res.json();
+  // Predict Form Submission
+  if (predictForm) {
+    predictForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      console.log("Prediction form submitted");
       
-      if (!res.ok) {
-        throw new Error(data.message || "Prediction failed");
+      // Get all form values
+      const formData = {
+        age: document.getElementById("age").value,
+        gender: document.getElementById("gender").value,
+        is_pregnant: document.getElementById("is_pregnant") ? document.getElementById("is_pregnant").value : 0,
+        height: document.getElementById("height").value || 0,
+        weight: document.getElementById("weight").value || 0,
+        bmi: document.getElementById("bmi").value || 0,
+        glucose: document.getElementById("glucose").value,
+        blood_pressure: document.getElementById("blood_pressure").value,
+        family_history: document.getElementById("family_history").value
+      };
+
+      // Validate required fields
+      if (!formData.age || !formData.glucose || !formData.blood_pressure || !formData.family_history || !formData.gender) {
+        alert("Please fill in all required fields");
+        return;
       }
 
-      if (data.status === "success") {
-        updateRiskChart(data.risk_score, data.prediction);
-        showSuggestion(data.prediction, data.suggestion);
-        loadUserLogs();
-        document.getElementById("result").style.display = "block";
-      } else {
-        alert(data.message || "Prediction failed");
+      const submitBtn = e.target.querySelector("button[type='submit']");
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Analyzing...";
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/predict`, {
+          method: "POST",
+          headers: { 
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${currentToken}`
+          },
+          body: JSON.stringify(formData),
+        });
+
+        const data = await res.json();
+        
+        if (!res.ok) {
+          throw new Error(data.message || "Prediction failed");
+        }
+
+        if (data.status === "success") {
+          updateRiskChart(data.risk_score, data.prediction);
+          showSuggestion(data.prediction, data.suggestion);
+          loadUserLogs();
+          if (resultContainer) resultContainer.style.display = "block";
+        } else {
+          alert(data.message || "Prediction failed");
+        }
+      } catch (error) {
+        console.error("Prediction error:", error);
+        alert(error.message || "Prediction failed. Please try again.");
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Check Risk";
       }
-    } catch (error) {
-      console.error("Prediction error:", error);
-      alert(error.message || "Prediction failed. Please try again.");
-    } finally {
-      submitBtn.disabled = false;
-      submitBtn.textContent = "Check Risk";
-    }
-  });
+    });
+  }
 
   // Download Reports
-  downloadCSV?.addEventListener("click", () => downloadReport("csv"));
-  downloadPDF?.addEventListener("click", () => downloadReport("pdf"));
+  if (downloadCSV) {
+    downloadCSV.addEventListener("click", () => downloadReport("csv"));
+  }
+  if (downloadPDF) {
+    downloadPDF.addEventListener("click", () => downloadReport("pdf"));
+  }
 
   async function loadUserLogs() {
+    if (!currentToken || !userLogsContainer) return;
+    
     try {
       console.log("Loading user logs with token:", currentToken);
       const res = await fetch(`${API_BASE_URL}/logs`, {
-  headers: {
-    'Authorization': `Bearer ${currentToken}`
-  });
+        headers: {
+          'Authorization': `Bearer ${currentToken}`
+        }
+      });
+      
+      if (!res.ok) {
+        throw new Error("Failed to fetch logs");
+      }
+      
       const data = await res.json();
 
-      if (data.status === "success" && data.logs.length > 0) {
+      if (data.status === "success" && data.logs?.length > 0) {
         userLogsContainer.innerHTML = "<h3>Your History</h3>";
         data.logs.forEach(log => {
           userLogsContainer.innerHTML += `
@@ -400,66 +422,95 @@ document.getElementById("login-form-data").addEventListener("submit", async (e) 
             </div>
           `;
         });
+      } else if (data.logs?.length === 0) {
+        userLogsContainer.innerHTML = "<p>No history records found</p>";
       }
     } catch (error) {
       console.error("Failed to load logs:", error);
+      if (userLogsContainer) {
+        userLogsContainer.innerHTML = "<p>Failed to load history. Please try again later.</p>";
+      }
     }
   }
 
   async function loadDoctorData() {
+    if (!currentToken) return;
+    
     try {
       // Load summary stats
       const summaryRes = await fetch(`${API_BASE_URL}/admin-summary`, {
-  headers: {
-    'Authorization': `Bearer ${currentToken}`
-  });
+        headers: {
+          'Authorization': `Bearer ${currentToken}`
+        }
+      });
+      
+      if (!summaryRes.ok) {
+        throw new Error("Failed to fetch summary data");
+      }
+      
       const summaryData = await summaryRes.json();
 
       if (summaryData.status === "success") {
-        totalPatientsEl.textContent = summaryData.summary.total_users;
-        highRiskCasesEl.textContent = summaryData.summary.diabetic_cases;
+        if (totalPatientsEl) totalPatientsEl.textContent = summaryData.summary.total_users;
+        if (highRiskCasesEl) highRiskCasesEl.textContent = summaryData.summary.diabetic_cases;
         updateDoctorChart(summaryData.summary);
       }
 
       // Load patient records
       const recordsRes = await fetch(`${API_BASE_URL}/all-records`, {
-  headers: {
-    'Authorization': `Bearer ${currentToken}`
-  });
+        headers: {
+          'Authorization': `Bearer ${currentToken}`
+        }
+      });
+      
+      if (!recordsRes.ok) {
+        throw new Error("Failed to fetch records");
+      }
+      
       const recordsData = await recordsRes.json();
 
-      if (recordsData.status === "success" && recordsData.records.length > 0) {
-        recordsList.innerHTML = "";
-        recordsData.records.forEach(record => {
-          recordsList.innerHTML += `
-            <div class="record-item">
-              <p><strong>Patient:</strong> ${record.email}</p>
-              <p><strong>Date:</strong> ${new Date(record.timestamp).toLocaleString()}</p>
-              <p class="${record.prediction === 1 ? 'high-risk' : 'low-risk'}">
-                <strong>Risk:</strong> ${record.prediction === 1 ? "High" : "Low"}
-              </p>
-              <p><strong>Glucose:</strong> ${record.glucose} mg/dL</p>
-              <p><strong>BMI:</strong> ${record.bmi}</p>
-            </div>
-          `;
-        });
+      if (recordsData.status === "success" && recordsData.records?.length > 0) {
+        if (recordsList) {
+          recordsList.innerHTML = "";
+          recordsData.records.forEach(record => {
+            recordsList.innerHTML += `
+              <div class="record-item">
+                <p><strong>Patient:</strong> ${record.email}</p>
+                <p><strong>Date:</strong> ${new Date(record.timestamp).toLocaleString()}</p>
+                <p class="${record.prediction === 1 ? 'high-risk' : 'low-risk'}">
+                  <strong>Risk:</strong> ${record.prediction === 1 ? "High" : "Low"}
+                </p>
+                <p><strong>Glucose:</strong> ${record.glucose} mg/dL</p>
+                <p><strong>BMI:</strong> ${record.bmi}</p>
+              </div>
+            `;
+          });
+        }
+      } else if (recordsData.records?.length === 0) {
+        if (recordsList) recordsList.innerHTML = "<p>No patient records found</p>";
       }
     } catch (error) {
       console.error("Failed to load doctor data:", error);
+      if (recordsList) recordsList.innerHTML = "<p>Failed to load records. Please try again later.</p>";
     }
   }
 
   async function downloadReport(type) {
+    if (!currentToken) return;
+    
     try {
       const btn = type === 'csv' ? downloadCSV : downloadPDF;
+      if (!btn) return;
+      
       const originalContent = btn.innerHTML;
       btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
       btn.disabled = true;
 
       const response = await fetch(`${API_BASE_URL}/download?type=${type}`, {
-  headers: {
-    'Authorization': `Bearer ${currentToken}`
-  });
+        headers: {
+          'Authorization': `Bearer ${currentToken}`
+        }
+      });
       
       if (!response.ok) {
         const error = await response.json();
@@ -483,8 +534,10 @@ document.getElementById("login-form-data").addEventListener("submit", async (e) 
       alert(`Download failed: ${error.message}`);
     } finally {
       const btn = type === 'csv' ? downloadCSV : downloadPDF;
-      btn.innerHTML = originalContent;
-      btn.disabled = false;
+      if (btn) {
+        btn.innerHTML = originalContent;
+        btn.disabled = false;
+      }
     }
   }
 
@@ -574,7 +627,9 @@ document.getElementById("login-form-data").addEventListener("submit", async (e) 
         riskChart.destroy();
       }
 
-      const ctx = document.getElementById('riskChart').getContext('2d');
+      const ctx = document.getElementById('riskChart')?.getContext('2d');
+      if (!ctx) return;
+      
       riskChart = new Chart(ctx, {
         type: 'doughnut',
         data: {
@@ -612,10 +667,10 @@ document.getElementById("login-form-data").addEventListener("submit", async (e) 
 
   function updateDoctorChart(summary) {
     try {
-      if (doctorChart) {
+      if (doctorChart && summary) {
         doctorChart.data.datasets[0].data = [
-          summary.non_diabetic_cases,
-          summary.diabetic_cases
+          summary.non_diabetic_cases || 0,
+          summary.diabetic_cases || 0
         ];
         doctorChart.update();
       }
@@ -626,9 +681,11 @@ document.getElementById("login-form-data").addEventListener("submit", async (e) 
 
   function showSuggestion(prediction, suggestion) {
     try {
+      if (!suggestionBox) return;
+      
       suggestionBox.innerHTML = `
         <h4>${prediction === "very high" || prediction === "high" ? "High Risk Detected" : "Low Risk"}</h4>
-        <p>${suggestion}</p>
+        <p>${suggestion || "No specific recommendations available."}</p>
         ${prediction === "very high" || prediction === "high" ? `
           <ul class="suggestion-list">
             <li><i class="fas fa-utensils"></i> Reduce sugar and refined carbs intake</li>
@@ -707,17 +764,42 @@ document.getElementById("login-form-data").addEventListener("submit", async (e) 
     }
   }
 
-  // Event listeners
+  // Event listeners for BMI calculation
   document.getElementById('height')?.addEventListener('input', calculateBMI);
   document.getElementById('weight')?.addEventListener('input', calculateBMI);
   document.getElementById('age')?.addEventListener('input', updateBMIGuidance);
   
-  const genderField = document.getElementById('gender');
-  const pregnancyField = document.getElementById('pregnancy-field');
-  
-  if (genderField && pregnancyField) {
-    genderField.addEventListener('change', function() {
-      pregnancyField.style.display = this.value === 'female' ? 'block' : 'none';
-    });
+  // Check for existing session on page load
+  function checkExistingSession() {
+    const token = sessionStorage.getItem('userToken');
+    const role = sessionStorage.getItem('userRole');
+    const email = sessionStorage.getItem('userEmail');
+    
+    if (token && role && email) {
+      currentToken = token;
+      currentRole = role;
+      currentEmail = email;
+      
+      // Hide all auth sections
+      if (roleSelection) roleSelection.style.display = "none";
+      if (loginForm) loginForm.style.display = "none";
+      if (registerRoleSelection) registerRoleSelection.style.display = "none";
+      if (registerPatientForm) registerPatientForm.style.display = "none";
+      if (registerDoctorForm) registerDoctorForm.style.display = "none";
+
+      // Show appropriate dashboard
+      if (role === "user") {
+        if (userDashboard) userDashboard.style.display = "block";
+        if (doctorDashboard) doctorDashboard.style.display = "none";
+        loadUserLogs();
+      } else if (role === "doctor") {
+        if (userDashboard) userDashboard.style.display = "none";
+        if (doctorDashboard) doctorDashboard.style.display = "block";
+        loadDoctorData();
+      }
+    }
   }
+
+  // Initialize session check
+  checkExistingSession();
 });
