@@ -475,21 +475,29 @@ document.getElementById("login-form-data").addEventListener("submit", async (e) 
 }
 
  async function downloadReport(type) {
+  const btn = type === 'csv' ? downloadCSV : downloadPDF;
+  const originalContent = btn.innerHTML;
+  
   try {
-    const btn = type === 'csv' ? downloadCSV : downloadPDF;
-    const originalContent = btn.innerHTML;
+    // Set loading state
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
     btn.disabled = true;
 
     const response = await fetch(`${API_BASE_URL}/download?type=${type}`, {
-  headers: {
-    'Authorization': `Bearer ${currentToken}`
-  }
-});
-    
+      headers: {
+        'Authorization': `Bearer ${currentToken}`
+      }
+    });
+
+    // Check if response is JSON (error) or file data
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to generate report');
+    }
+
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to generate report');
+      throw new Error('Failed to generate report');
     }
 
     const blob = await response.blob();
@@ -501,6 +509,7 @@ document.getElementById("login-form-data").addEventListener("submit", async (e) 
     document.body.appendChild(a);
     a.click();
     
+    // Cleanup
     window.URL.revokeObjectURL(url);
     document.body.removeChild(a);
 
@@ -508,7 +517,7 @@ document.getElementById("login-form-data").addEventListener("submit", async (e) 
     console.error('Download error:', error);
     alert(`Download failed: ${error.message}`);
   } finally {
-    const btn = type === 'csv' ? downloadCSV : downloadPDF;
+    // Always reset the button state
     btn.innerHTML = originalContent;
     btn.disabled = false;
   }
