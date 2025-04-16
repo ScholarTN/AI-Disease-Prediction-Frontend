@@ -382,7 +382,10 @@ document.getElementById("login-form-data").addEventListener("submit", async (e) 
   async function loadUserLogs() {
     try {
       console.log("Loading user logs with token:", currentToken);
-      const res = await fetch(`http://127.0.0.1:5050/logs?token=${currentToken}`);
+      const res = await fetch(`${API_BASE_URL}/logs`, {
+  headers: {
+    'Authorization': `Bearer ${currentToken}`
+  });
       const data = await res.json();
 
       if (data.status === "success" && data.logs.length > 0) {
@@ -406,7 +409,10 @@ document.getElementById("login-form-data").addEventListener("submit", async (e) 
   async function loadDoctorData() {
     try {
       // Load summary stats
-      const summaryRes = await fetch(`http://127.0.0.1:5050/admin-summary?token=${currentToken}`);
+      const summaryRes = await fetch(`${API_BASE_URL}/admin-summary`, {
+  headers: {
+    'Authorization': `Bearer ${currentToken}`
+  });
       const summaryData = await summaryRes.json();
 
       if (summaryData.status === "success") {
@@ -416,7 +422,10 @@ document.getElementById("login-form-data").addEventListener("submit", async (e) 
       }
 
       // Load patient records
-      const recordsRes = await fetch(`http://127.0.0.1:5050/all-records?token=${currentToken}`);
+      const recordsRes = await fetch(`${API_BASE_URL}/all-records`, {
+  headers: {
+    'Authorization': `Bearer ${currentToken}`
+  });
       const recordsData = await recordsRes.json();
 
       if (recordsData.status === "success" && recordsData.records.length > 0) {
@@ -447,7 +456,10 @@ document.getElementById("login-form-data").addEventListener("submit", async (e) 
       btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
       btn.disabled = true;
 
-      const response = await fetch(`http://127.0.0.1:5050/download?token=${currentToken}&type=${type}`);
+      const response = await fetch(`${API_BASE_URL}/download?type=${type}`, {
+  headers: {
+    'Authorization': `Bearer ${currentToken}`
+  });
       
       if (!response.ok) {
         const error = await response.json();
