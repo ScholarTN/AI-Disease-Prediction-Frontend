@@ -404,23 +404,48 @@ document.getElementById("login-form-data").addEventListener("submit", async (e) 
   }
 
   async function loadDoctorData() {
-    try {
-      // Load summary stats
-      const summaryRes = await fetch(`${API_BASE_URL}/admin-summary?token=${currentToken}`); 
-      const summaryData = await summaryRes.json();
-
-      if (summaryData.status === "success") {
-        totalPatientsEl.textContent = summaryData.summary.total_users;
-        highRiskCasesEl.textContent = summaryData.summary.diabetic_cases;
-        updateDoctorChart(summaryData.summary);
+  try {
+    // Load summary stats
+    const summaryRes = await fetch(`${API_BASE_URL}/admin-summary`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${currentToken}`
       }
+    });
+    
+    const summaryData = await summaryRes.json();
+    console.log("Summary data:", summaryData);  // Debug log
 
-      // Load patient records
-      const recordsRes = await fetch(`${API_BASE_URL}/all-records?token=${currentToken}`); 
-      const recordsData = await recordsRes.json();
+    if (summaryData.status === "success") {
+      totalPatientsEl.textContent = summaryData.summary.total_users;
+      highRiskCasesEl.textContent = summaryData.summary.diabetic_cases;
+      
+      // Ensure we have valid numbers for the chart
+      const diabeticCases = summaryData.summary.diabetic_cases || 0;
+      const nonDiabeticCases = summaryData.summary.non_diabetic_cases || 0;
+      
+      updateDoctorChart({
+        diabetic_cases: diabeticCases,
+        non_diabetic_cases: nonDiabeticCases
+      });
+    } else {
+      console.error("Failed to load summary:", summaryData.message);
+    }
 
-      if (recordsData.status === "success" && recordsData.records.length > 0) {
-        recordsList.innerHTML = "";
+    // Load patient records
+    const recordsRes = await fetch(`${API_BASE_URL}/all-records`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${currentToken}`
+      }
+    });
+    
+    const recordsData = await recordsRes.json();
+    console.log("Records data:", recordsData);  // Debug log
+
+    if (recordsData.status === "success") {
+      recordsList.innerHTML = "";
+      if (recordsData.records && recordsData.records.length > 0) {
         recordsData.records.forEach(record => {
           recordsList.innerHTML += `
             <div class="record-item">
@@ -434,47 +459,59 @@ document.getElementById("login-form-data").addEventListener("submit", async (e) 
             </div>
           `;
         });
+      } else {
+        recordsList.innerHTML = "<p>No records found</p>";
       }
-    } catch (error) {
-      console.error("Failed to load doctor data:", error);
+    } else {
+      console.error("Failed to load records:", recordsData.message);
+      recordsList.innerHTML = `<p>Error loading records: ${recordsData.message}</p>`;
     }
+  } catch (error) {
+    console.error("Failed to load doctor data:", error);
+    recordsList.innerHTML = `<p>Error: ${error.message}</p>`;
   }
+}
 
-  async function downloadReport(type) {
-    try {
-      const btn = type === 'csv' ? downloadCSV : downloadPDF;
-      const originalContent = btn.innerHTML;
-      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
-      btn.disabled = true;
+ async function downloadReport(type) {
+  try {
+    const btn = type === 'csv' ? downloadCSV : downloadPDF;
+    const originalContent = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+    btn.disabled = true;
 
-      const response = await fetch(`${API_BASE_URL}/download?token=${currentToken}&type=${type}`);  
-      
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to generate report');
+    const response = await fetch(`${API_BASE_URL}/download?type=${type}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${currentToken}`  // Send token in Authorization header
       }
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `diabetes_records.${type}`;
-      document.body.appendChild(a);
-      a.click();
-      
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-
-    } catch (error) {
-      console.error('Download error:', error);
-      alert(`Download failed: ${error.message}`);
-    } finally {
-      const btn = type === 'csv' ? downloadCSV : downloadPDF;
-      btn.innerHTML = originalContent;
-      btn.disabled = false;
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to generate report');
     }
+
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `diabetes_records.${type}`;
+    document.body.appendChild(a);
+    a.click();
+    
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+
+  } catch (error) {
+    console.error('Download error:', error);
+    alert(`Download failed: ${error.message}`);
+  } finally {
+    const btn = type === 'csv' ? downloadCSV : downloadPDF;
+    btn.innerHTML = originalContent;
+    btn.disabled = false;
   }
+}
 
   function initCharts() {
     try {
